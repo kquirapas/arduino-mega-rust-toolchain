@@ -18,13 +18,13 @@ fn main() -> ! {
     blue_led_pwm.set_duty(duty_cycle);
     blue_led_pwm.enable();
 
-    let timer0 = Timer0Pwm::new(dp.TC0, arduino_hal::simple_pwm::Prescaler::Prescale1024);
+    let timer0 = Timer0Pwm::new(dp.TC0, arduino_hal::simple_pwm::Prescaler::Direct);
     let mut buzzer_pwm = pins.d4.into_output().into_pwm(&timer0);
     buzzer_pwm.set_duty(duty_cycle);
     buzzer_pwm.enable();
 
     loop {
-        delay_ms(4);
+        delay_ms(1);
         if is_brightening {
             blue_led_pwm.set_duty(duty_cycle);
             buzzer_pwm.set_duty(255_u8.saturating_sub(duty_cycle));
@@ -34,7 +34,7 @@ fn main() -> ! {
             }
         } else {
             blue_led_pwm.set_duty(duty_cycle);
-            buzzer_pwm.set_duty(255_u8.saturating_add(duty_cycle));
+            buzzer_pwm.set_duty(255_u8.saturating_sub(duty_cycle));
             duty_cycle = duty_cycle.saturating_sub(1);
             if duty_cycle == u8::MIN {
                 is_brightening = !is_brightening;
