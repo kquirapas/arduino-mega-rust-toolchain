@@ -58,9 +58,20 @@ use panic_halt as _;
 //     }
 // }
 
+const DEFAULT_BAUD_RATE: u32 = 57600;
+
 #[arduino_hal::entry]
 fn main() -> ! {
     let dp = arduino_hal::Peripherals::take().unwrap();
     let pins = arduino_hal::pins!(dp);
-    loop {}
+    let mut serial = arduino_hal::default_serial!(dp, pins, DEFAULT_BAUD_RATE);
+    let mut adc = arduino_hal::Adc::new(dp.ADC, Default::default());
+    let temp = pins.a0.into_analog_input(&mut adc);
+    loop {
+        let reading = temp.analog_read(&mut adc);
+        let celsius = (reading as f32 * (5000.0 / 1024.0)) / 10.0; // 10mV is LM35 constant/per degree C.
+        let displayed_temp = celsius as u32;
+        // ufmt::uwriteln!(&mut serial, "{}mv", reading).unwrap_infallible();
+        ufmt::uwriteln!(&mut serial, "{}C", celsius as u32).unwrap_infallible();
+    }
 }
